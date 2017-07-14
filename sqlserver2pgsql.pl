@@ -209,8 +209,8 @@ my %types = ('int'              => 'int',
              'image'            => 'bytea',
              'binary'           => 'bytea',
              'varbinary'        => 'bytea',
-             'money'            => 'numeric',
-             'smallmoney'       => 'numeric(6,4)',
+             'money'            => 'numeric(10,2)',
+             'smallmoney'       => 'numeric(10,2)',
              'uniqueidentifier' => 'uuid',
              'xml'              => 'xml',);
 
