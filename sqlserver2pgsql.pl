@@ -53,6 +53,9 @@ our $use_pk_if_possible;
 # Will be set if we detect GIS objects
 our $requires_postgis=0;
 
+# Will be set if we detect UUID objects
+our $requires_uuid_ossp=0;
+
 # These three variables are loaded in the BEGIN block at the end of this file (they are very big
 my $template;
 my $template_lob;
@@ -496,6 +499,12 @@ sub convert_transactsql_code
 	$code =~ s/user_name\s*\(\)/CURRENT_USER/gi;
 	$code =~ s/datepart\s*\(\s*(.*?)\s*\,\s*(.*?)\s*\)/date_part('$1', $2)/gi;
   $code =~ s/newid\s*\(\)/uuid_generate_v4()/gi;
+
+  # Checks if the uuid-ossp plugin is needed for creating new UUIDs
+  if ($code =~ m/uuid_generate_v4/) {
+    $requires_uuid_ossp=1;
+  }
+
 	return $code;
 }
 
@@ -2240,15 +2249,15 @@ sub generate_schema
     open BEFORE, ">:utf8", $before_file or die "Cannot open $before_file, $!";
     open AFTER,  ">:utf8", $after_file  or die "Cannot open $after_file, $!";
     open UNSURE, ">:utf8", $unsure_file or die "Cannot open $unsure_file, $!";
-    print BEFORE "\\set ON_ERROR_STOP\n";
-    print BEFORE "\\set ECHO all\n";
-    print BEFORE "BEGIN;\n";
-    print AFTER "\\set ON_ERROR_STOP\n";
-    print AFTER "\\set ECHO all\n";
-    print AFTER "BEGIN;\n";
-    print UNSURE "\\set ON_ERROR_STOP\n";
-    print AFTER "\\set ECHO all\n";
-    print UNSURE "BEGIN;\n";
+    # print BEFORE "\\set ON_ERROR_STOP\n";
+    # print BEFORE "\\set ECHO all\n";
+    # print BEFORE "BEGIN;\n";
+    # print AFTER "\\set ON_ERROR_STOP\n";
+    # print AFTER "\\set ECHO all\n";
+    # print AFTER "BEGIN;\n";
+    # print UNSURE "\\set ON_ERROR_STOP\n";
+    # print AFTER "\\set ECHO all\n";
+    # print UNSURE "BEGIN;\n";
 
     # Are we case insensitive ? We have to install citext then
     # Won't work on pre-9.1 database. But as this is a migration tool
@@ -2263,6 +2272,12 @@ sub generate_schema
     {
         print BEFORE "CREATE EXTENSION IF NOT EXISTS postgis;\n";
         print BEFORE "CREATE EXTENSION IF NOT EXISTS postgis_topology;\n";
+    }
+
+    # Do we require uuid-ossp ?
+    if ($requires_uuid_ossp)
+    {
+      print BEFORE "CREATE EXTENSION IF NOT EXISTS uuid-ossp;\n";
     }
 
     # Ok, we have parsed everything, and definitions are in $objects
@@ -2670,9 +2685,9 @@ sub generate_schema
         }
     }
 
-    print BEFORE "COMMIT;\n";
-    print AFTER "COMMIT;\n";
-    print UNSURE "COMMIT;\n";
+    # print BEFORE "COMMIT;\n";
+    # print AFTER "COMMIT;\n";
+    # print UNSURE "COMMIT;\n";
     close BEFORE;
     close AFTER;
     close UNSURE;
