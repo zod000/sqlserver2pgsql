@@ -2277,7 +2277,7 @@ sub generate_schema
     # Do we require uuid-ossp ?
     if ($requires_uuid_ossp)
     {
-      print BEFORE "CREATE EXTENSION IF NOT EXISTS uuid-ossp;\n";
+      print BEFORE "CREATE EXTENSION IF NOT EXISTS \"uuid-ossp\";\n";
     }
 
     # Ok, we have parsed everything, and definitions are in $objects
